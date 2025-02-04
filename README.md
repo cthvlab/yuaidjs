@@ -15,16 +15,16 @@
 
 Для начала работы с **Yuai DJs** достаточно просто подключить основной скрипт к вашему проекту:
 
-1. Скачайте [yuai-djs.min.js](https://github.com/cthvlab/yuaidjs/releases/latest/download/yuaidjs.min.js) и подключите его в HTML файле:
+1. Скачайте [yuaidjs.min.js](https://github.com/cthvlab/yuaidjs/releases/latest/download/yuaidjs.min.js) и подключите его в HTML файле:
    
 ```html
-<script src="path/to/yuai-djs.min.js"></script>
+<script src="path/to/yuaidjs.min.js"></script>
 ```
 
 Или установите через NPM:
 
 ```bash
-npm install yuai-djs
+npm install yuaidjs
 ```
 
 ## Пример использования
