@@ -13,123 +13,127 @@
 
 ## Установка
 
-Для начала работы с **Yuai DJs** достаточно просто подключить основной скрипт к вашему проекту:
+Для использования фреймворка просто добавьте файл `yuaidjs.min.js` в ваш проект.
 
-1. Скачайте [yuaidjs.min.js](https://github.com/cthvlab/yuaidjs/releases/latest/download/yuaidjs.min.js) и подключите его в HTML файле:
-   
+### Включение в проект
+
+1. Скачайте файл `yuaidjs.min.js` и поместите его в вашу папку с проектом.
+2. Подключите его в вашем HTML-файле:
+
 ```html
 <script src="path/to/yuaidjs.min.js"></script>
 ```
 
-Или установите через NPM:
+> Замените `path/to/` на путь, где хранится ваш файл `yuaidjs.min.js`.
 
-```bash
-npm install yuaidjs
-```
+## Основные возможности
+
+1. **Реактивные компоненты:** С помощью класса `Reactive` вы можете управлять состоянием данных, автоматически обновляя все компоненты, которые используют эти данные.
+   
+2. **Роутинг:** Поддержка динамической навигации между страницами и компонентами с изменением URL.
+
+3. **Кастомные события:** Легкая обработка событий через атрибуты `data-event`, что позволяет связывать действия с компонентами.
+
+4. **Асинхронные операции:** Возможность делать асинхронные запросы через метод `fetchData` в классе `Reactive` для получения данных с сервера.
 
 ## Пример использования
 
-Вот базовый пример, демонстрирующий, как использовать фреймворк для создания реактивного интерфейса.
-
-### Шаг 1: Создание компонента
-
 ```javascript
-// app.js
+// Создаем компонент
+const myComponent = new Component(
+  data => `<div><h1>${data.title}</h1><button data-event="click:changeTitle">Change Title</button></div>`,
+  { title: 'Hello, YUAI DJs!' }
+);
 
-const jsonData = [
-  { type: 'text', content: 'Hello, world!' },
-  { type: 'button', label: 'Click Me' },
-];
+// Добавляем компонент в DOM
+document.body.appendChild(myComponent.getElement());
 
-const appData = {
-  title: 'My App',
-  counter: 0,
-};
+// Реактивные данные и события
+myComponent.reactiveData.subscribe(() => {
+  console.log('Data updated:', myComponent.reactiveData.data);
+});
 
-const appTemplate = (data) => {
-  return `
-    <h1>${data.title}</h1>
-    <p>Counter: ${data.counter}</p>
-    ${renderJSON(jsonData)}
-  `;
-};
+// Обработка изменения данных
+myComponent.reactiveData.set('title', 'New Title');
 
-const appComponent = new Component(appTemplate, appData);
-document.body.appendChild(appComponent.getElement());
+// Создаем роутер
+const appRouter = new Router({
+  '/home': new Component(data => `<div><h1>Home Page</h1></div>`, {}),
+  '/about': new Component(data => `<div><h1>About Page</h1></div>`, {})
+});
 
-// Пример обновления данных
-setInterval(() => {
-  appData.counter++;
-  appComponent.reactiveData.set('counter', appData.counter);
-}, 1000);
+// Навигация по страницам
+appRouter.navigate('/home');
 ```
 
-### Шаг 2: Рендеринг JSON
+### Обработчик кастомных событий
+
+```html
+<button data-event="click:goToHome">Go to Home</button>
+<button data-event="click:goToAbout">Go to About</button>
+```
+
+## API
+
+### Класс `Reactive`
+
+- **`Reactive(data)`** — Конструктор класса. Принимает начальные данные для компонента.
+- **`set(key, value)`** — Устанавливает новое значение для свойства и уведомляет подписчиков.
+- **`get(key)`** — Получает значение свойства.
+- **`subscribe(listener)`** — Добавляет функцию-подписчика, которая будет вызвана при изменении данных.
+- **`fetchData(url)`** — Асинхронный метод для получения данных с сервера.
+- **`computed(key, computeFn)`** — Поддержка вычисляемых свойств.
+
+### Класс `Component`
+
+- **`Component(template, data)`** — Создает компонент, используя шаблон и данные.
+- **`render()`** — Рендерит компонент в DOM.
+- **`update()`** — Обновляет компонент при изменении данных.
+- **`getElement()`** — Возвращает элемент компонента.
+
+### Класс `Router`
+
+- **`Router(routes)`** — Создает новый роутер с заданными маршрутами.
+- **`navigate(path)`** — Перемещает на указанный маршрут.
+- **`render(route)`** — Отображает компонент для текущего маршрута.
+
+## Пример маршрутов
 
 ```javascript
-// Функция для рендеринга JSON в HTML
-function renderJSON(json) {
-  return json.map(item => {
-    if (item.type === 'text') {
-      return item.content;
-    } else if (item.type === 'button') {
-      return `<button>${item.label}</button>`;
+const router = new Router({
+  '/home': new Component(data => `<h1>Welcome to Home</h1>`, {}),
+  '/about': new Component(data => `<h1>About Page</h1>`, {}),
+});
+
+router.navigate('/home');
+```
+
+## Поддержка кастомных событий
+
+Вы можете добавлять кастомные события к элементам, например:
+
+```html
+<button data-event="click:goToAbout">Go to About</button>
+<button data-event="click:goToHome">Go to Home</button>
+```
+
+Для обработки этих событий используйте делегирование событий, как показано в примере:
+
+```javascript
+document.body.addEventListener('click', event => {
+  const target = event.target;
+  if (target && target.dataset.event) {
+    const [eventType, action] = target.dataset.event.split(':');
+    if (eventType === 'click') {
+      if (action === 'goToAbout') {
+        appRouter.navigate('/about');
+      } else if (action === 'goToHome') {
+        appRouter.navigate('/home');
+      }
     }
-    return '';
-  }).join('');
-}
+  }
+});
 ```
-
-### Шаг 3: Запуск приложения
-
-После того как вы подключили фреймворк и написали код, откройте HTML файл в браузере, и интерфейс будет автоматически обновляться при изменении данных.
-
-## Как это работает?
-
-1. **Компоненты**: Все UI-элементы организуются в компоненты, которые рендерят данные в HTML на основе шаблонов.
-2. **Реактивность**: Когда данные в компоненте меняются, компонент автоматически обновляет свой DOM, что позволяет поддерживать актуальный UI без явных вызовов перерендера.
-3. **Шаблоны**: Вы можете использовать шаблоны для динамического создания интерфейсов на основе данных в формате JSON.
-
-## Документация
-
-### Reactive
-
-Класс для работы с реактивными данными.
-
-```javascript
-const reactiveData = new Reactive(initialData);
-reactiveData.set('key', 'newValue');
-```
-
-- `get(key)`: Получить значение данных по ключу.
-- `set(key, value)`: Установить новое значение.
-- `subscribe(callback)`: Подписаться на изменения данных.
-
-### Component
-
-Класс для создания компонента.
-
-```javascript
-const component = new Component(templateFunction, data);
-document.body.appendChild(component.getElement());
-```
-
-- `render()`: Метод для рендеринга компонента.
-- `update()`: Метод для обновления компонента после изменения данных.
-
-### renderJSON
-
-Функция для рендеринга JSON данных в HTML.
-
-```javascript
-function renderJSON(json);
-```
-
-## Развитие фреймворка
-
-- **Поддержка вложенных компонентов**: Реализуйте систему для создания вложенных компонентов с собственными состояниями.
-- **Поддержка событий**: Добавьте обработку пользовательских событий (клики, ввод данных).
-- **Поддержка стилей**: Добавьте возможность привязки стилей к данным или компонентам.
 
 ## Контрибьюции
 
