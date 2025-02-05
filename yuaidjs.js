@@ -1,92 +1,138 @@
-// Реактивность
+// Класс для управления реактивными данными
 class Reactive {
   constructor(data) {
-    this.data = data;
-    this.listeners = [];
+    this.data = data; // Исходные данные
+    this.listeners = []; // Список подписчиков на изменения
   }
 
+  // Устанавливает новое значение для свойства и уведомляет подписчиков
   set(key, value) {
-    this.data[key] = value;
-    this.notify();
+    this.data[key] = value; // Обновление данных
+    this.notify(); // Уведомление всех подписчиков об изменении
   }
 
+  // Получает текущее значение свойства
   get(key) {
     return this.data[key];
   }
 
+  // Уведомляет всех подписчиков о том, что данные изменились
   notify() {
-    this.listeners.forEach(listener => listener());
+    this.listeners.forEach(listener => listener()); // Вызываем все функции-подписчики
   }
 
+  // Добавляет функцию-подписчика, которая будет вызвана при изменении данных
   subscribe(listener) {
-    this.listeners.push(listener);
+    this.listeners.push(listener); // Добавляем подписчика в список
+  }
+
+  // Асинхронный метод для получения данных с сервера и обновления состояния
+  async fetchData(url) {
+    const response = await fetch(url); // Загружаем данные
+    this.set('data', await response.json()); // Обновляем данные
+  }
+
+  // Поддержка вычисляемых свойств, которые зависят от других данных
+  computed(key, computeFn) {
+    Object.defineProperty(this.data, key, {
+      get: computeFn, // Функция для вычисления значения
+      enumerable: true, // Позволяет свойству быть перечисляемым
+    });
   }
 }
 
-// Компонент
+// Класс для создания компонентов, которые могут быть рендерены в DOM
 class Component {
   constructor(template, data) {
-    this.template = template;
-    this.reactiveData = new Reactive(data);
-    this.reactiveData.subscribe(() => this.update());
-    this.el = this.render();
+    this.template = template; // Шаблон, который будет использоваться для рендеринга
+    this.reactiveData = new Reactive(data); // Создание реактивных данных для компонента
+    this.reactiveData.subscribe(() => this.update()); // Подписка на обновления данных
+    this.el = this.render(); // Изначальный рендеринг компонента
   }
 
+  // Рендерит HTML из шаблона и возвращает элемент
   render() {
-    const html = this.template(this.reactiveData.data);
-    const div = document.createElement('div');
-    div.innerHTML = html;
-    return div;
+    const html = this.template(this.reactiveData.data); // Генерация HTML с использованием шаблона
+    const div = document.createElement('div'); // Создание контейнера для HTML
+    div.innerHTML = html; // Заполнение контейнера HTML
+    return div; // Возвращаем элемент
   }
 
+  // Обновляет HTML компонента, когда изменяются данные
   update() {
-    const newHtml = this.template(this.reactiveData.data);
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = newHtml;
-    this.el.innerHTML = tempDiv.innerHTML;
+    const newHtml = this.template(this.reactiveData.data); // Генерация нового HTML с использованием шаблона
+    const tempDiv = document.createElement('div'); // Временный контейнер для нового HTML
+    tempDiv.innerHTML = newHtml; // Заполнение контейнера новым HTML
+    this.el.innerHTML = tempDiv.innerHTML; // Обновляем содержимое компонента
   }
 
+  // Возвращает элемент компонента
   getElement() {
-    return this.el;
+    return this.el; // Возвращаем рендеренный элемент компонента
   }
 }
 
-// Рендеринг JSON в HTML
-function renderJSON(json) {
-  return json.map(item => {
-    if (item.type === 'text') {
-      return item.content;
-    } else if (item.type === 'button') {
-      return `<button>${item.label}</button>`;
+// Класс для управления роутингом
+class Router {
+  constructor(routes) {
+    this.routes = routes; // Храним все маршруты в объекте
+    this.currentRoute = null; // Текущий рендеренный маршрут
+    window.addEventListener('popstate', this.handleRouteChange.bind(this)); // Слушаем изменения в истории браузера
+  }
+
+  // Обрабатывает изменение маршрута (при клике на ссылку или при изменении истории)
+  handleRouteChange() {
+    const route = this.routes[window.location.pathname]; // Получаем маршрут по текущему пути
+    if (route) {
+      this.render(route); // Если маршрут найден, рендерим его
     }
-    return '';
-  }).join('');
+  }
+
+  // Метод для перехода по маршруту
+  navigate(path) {
+    window.history.pushState({}, '', path); // Изменяем URL в истории браузера
+    const route = this.routes[path]; // Получаем маршрут для нового пути
+    if (route) {
+      this.render(route); // Рендерим компонент для нового маршрута
+    }
+  }
+
+  // Рендерит компонент маршрута на страницу
+  render(route) {
+    if (this.currentRoute) {
+      this.currentRoute.getElement().remove(); // Удаляем предыдущий компонент
+    }
+    this.currentRoute = route; // Сохраняем новый компонент как текущий
+    document.body.appendChild(route.getElement()); // Добавляем новый компонент в DOM
+  }
 }
 
-// Пример использования
-const jsonData = [
-  { type: 'text', content: 'Hello, world!' },
-  { type: 'button', label: 'Click Me' },
-];
+// Обработчик событий, который выполняется, когда DOM полностью загружен
+document.addEventListener('DOMContentLoaded', () => {
+  // Создаем роутер и маршруты
+  const app = new Router({
+    '/home': new Component(
+      data => `<div><h1>Home</h1><button data-event="click:goToAbout">Go to About</button></div>`,
+      {}
+    ),
+    '/about': new Component(
+      data => `<div><h1>About</h1><button data-event="click:goToHome">Go to Home</button></div>`,
+      {}
+    ),
+  });
 
-const appData = {
-  title: 'My App',
-  counter: 0,
-};
-
-const appTemplate = (data) => {
-  return `
-    <h1>${data.title}</h1>
-    <p>Counter: ${data.counter}</p>
-    ${renderJSON(jsonData)}
-  `;
-};
-
-const appComponent = new Component(appTemplate, appData);
-document.body.appendChild(appComponent.getElement());
-
-// Пример обновления данных
-setInterval(() => {
-  appData.counter++;
-  appComponent.reactiveData.set('counter', appData.counter);
-}, 1000);
+  // Обработчик кликов по кнопкам с кастомными событиями
+  document.body.addEventListener('click', event => {
+    const target = event.target; // Получаем элемент, по которому был клик
+    if (target && target.dataset.event) { // Проверяем, есть ли у элемента кастомное событие
+      const [eventType, action] = target.dataset.event.split(':'); // Разбираем событие
+      if (eventType === 'click') { // Проверяем, что событие связано с кликом
+        if (action === 'goToAbout') {
+          app.navigate('/about'); // Переходим на страницу "About"
+        } else if (action === 'goToHome') {
+          app.navigate('/home'); // Переходим на страницу "Home"
+        }
+      }
+    }
+  });
+});
