@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Парсер Json файлов, чтобы работало пока необходимо создать несколько тегов, в дальнейшем всё будет делать скрипт
+  // Парсер Json файлов
 const buttonJson = document.createElement('button'); // Создаётся button который принимает и отправляет результат
 document.body.appendChild(buttonJson);
 buttonJson.id = 'buttonJson';
