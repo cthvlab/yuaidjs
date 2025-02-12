@@ -135,4 +135,39 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
+
+  // Парсер Json файлов
+const buttonJson = document.createElement('button'); // Создаётся button который принимает и отправляет результат
+document.body.appendChild(buttonJson);
+buttonJson.id = 'buttonJson';
+buttonJson.innerHTML = 'Парсер';
+const divOne = document.createElement('div'); // Создаётся div в котором будет помещаться результат
+divOne.id = 'priceCamp1'; // Присваивается id 'priceCamp1' для того чтобы скрипт находил куда помещать результат
+document.body.appendChild(divOne);
+const inputParam = document.createElement('input'); // Создаётся тег input который принимает ссылку на Json файл
+document.body.appendChild(inputParam);
+inputParam.id = 'json';
+
+function jsonParser(requestURL){ // Функция которая парсит Json с параметром requestURL - ссылка на Json файл
+
+    const request = new XMLHttpRequest(); // Парсинг
+    request.open("GET", requestURL); // Здесь подставляется ваше значение - ссылка на Json
+    request.responseType = "json";
+    request.send();
+    request.onload = function () {
+        const campData = request.response;
+        dateCamp(campData);
+    };
+
+    function dateCamp(jsonObj) { // Создаётся функция которая парсит Json, ищет и отдаёт ответ
+        const priceCamp1 = document.getElementById("priceCamp1");
+        const priceCampText1 = (priceCamp1.innerHTML = jsonObj["resultch"][0].price + "₽");
+    }
+}
+console.log(jsonParser());
+
+buttonJson.addEventListener('click', () => { // Создаётся функция которая принимает параметр и выдаёт результат
+    const inputValue = inputParam.value;
+    jsonParser(inputValue);
+})
 });
