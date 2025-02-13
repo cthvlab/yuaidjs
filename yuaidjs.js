@@ -107,32 +107,4 @@ class Router {
   }
 }
 
-// Обработчик событий, который выполняется, когда DOM полностью загружен
-document.addEventListener('DOMContentLoaded', () => {
-  // Создаем роутер и маршруты
-  const app = new Router({
-    '/home': new Component(
-      data => `<div><h1>Home</h1><button data-event="click:goToAbout">Go to About</button></div>`,
-      {}
-    ),
-    '/about': new Component(
-      data => `<div><h1>About</h1><button data-event="click:goToHome">Go to Home</button></div>`,
-      {}
-    ),
-  });
 
-  // Обработчик кликов по кнопкам с кастомными событиями
-  document.body.addEventListener('click', event => {
-    const target = event.target; // Получаем элемент, по которому был клик
-    if (target && target.dataset.event) { // Проверяем, есть ли у элемента кастомное событие
-      const [eventType, action] = target.dataset.event.split(':'); // Разбираем событие
-      if (eventType === 'click') { // Проверяем, что событие связано с кликом
-        if (action === 'goToAbout') {
-          app.navigate('/about'); // Переходим на страницу "About"
-        } else if (action === 'goToHome') {
-          app.navigate('/home'); // Переходим на страницу "Home"
-        }
-      }
-    }
-  });
-});
