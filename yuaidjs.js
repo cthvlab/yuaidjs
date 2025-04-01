@@ -1,131 +1,123 @@
-// Глобальный объект для фреймворка YuaidJS
-window.YuaidJS = window.YuaidJS || {};
+// yuaidjs.js — автономная версия фреймворка YuaidJS с поддержкой WebSocket
 
-// Класс для управления реактивными данными
-YuaidJS.Reactive = function(data) {
-  this.data = data;
-  this.listeners = [];
-};
-
-YuaidJS.Reactive.prototype.set = function(key, value) {
-  this.data[key] = value;
-  this.notify();
-};
-
-YuaidJS.Reactive.prototype.get = function(key) {
-  return this.data[key];
-};
-
-YuaidJS.Reactive.prototype.notify = function() {
-  this.listeners.forEach(function(listener) { listener(); });
-};
-
-YuaidJS.Reactive.prototype.subscribe = function(listener) {
-  this.listeners.push(listener);
-};
-
-YuaidJS.Reactive.prototype.fetchData = async function(url) {
-  const response = await fetch(url);
-  this.set('data', await response.json());
-};
-
-YuaidJS.Reactive.prototype.computed = function(key, computeFn) {
-  Object.defineProperty(this.data, key, {
-    get: computeFn,
-    enumerable: true
-  });
-};
-
-// Класс для создания компонентов
-YuaidJS.Component = function(template, data) {
-  this.template = template;
-  this.reactiveData = new YuaidJS.Reactive(data);
-  this.reactiveData.subscribe(this.update.bind(this));
-  this.el = this.render();
-};
-
-YuaidJS.Component.prototype.render = function() {
-  const html = this.template(this.reactiveData.data);
-  const div = document.createElement('div');
-  div.className = 'yuaidjs-component'; // Добавляем класс с названием фреймворка
-  div.innerHTML = html;
-  return div;
-};
-
-YuaidJS.Component.prototype.update = function() {
-  const newHtml = this.template(this.reactiveData.data);
-  const tempDiv = document.createElement('div');
-  tempDiv.innerHTML = newHtml;
-  this.el.innerHTML = tempDiv.innerHTML;
-};
-
-YuaidJS.Component.prototype.getElement = function() {
-  return this.el;
-};
-
-// Компонент для отображения контента
-YuaidJS.ContentContainer = function(data, router) {
-  YuaidJS.Component.call(this, YuaidJS.ContentContainer.template, data);
-  this.router = router;
-  if (data.data && data.data.hits && data.data.hits.length > 0) {
-    this.loadContent();
+class Reactive {
+  constructor(data) {
+    this.data = data;
+    this.listeners = [];
+    this.socket = null;
   }
-  this.reactiveData.subscribe(this.loadContent.bind(this));
-};
 
-YuaidJS.ContentContainer.prototype = Object.create(YuaidJS.Component.prototype);
-YuaidJS.ContentContainer.prototype.constructor = YuaidJS.ContentContainer;
+  subscribe(callback) {
+    this.listeners.push(callback);
+  }
 
-YuaidJS.ContentContainer.template = function(data) {
-  return `
-    <div class="yuaidjs-content-container">
-      ${data.content || 'Загрузка контента...'}
-    </div>
-  `;
-};
+  set(key, value) {
+    this.data[key] = value;
+    this.listeners.forEach(cb => cb());
+  }
 
-YuaidJS.ContentContainer.prototype.loadContent = async function() {
-  const hits = this.reactiveData.get('data')?.hits;
-  if (hits && hits.length > 0) {
-    const contentUrl = `${hits[0].alias}_${hits[0].id}`;
-    try {
-      this.router.navigate(`/${contentUrl}`);
-      const response = await fetch(contentUrl);
-      const content = await response.text();
-      this.reactiveData.set('content', content);
-    } catch (error) {
-      this.reactiveData.set('content', 'Ошибка загрузки контента (YuaidJS)');
+  replace(newData) {
+    this.data = newData;
+    this.listeners.forEach(cb => cb());
+  }
+
+  fetchData(url) {
+    fetch(url)
+      .then(r => r.json())
+      .then(json => {
+        this.replace(json);
+      })
+      .catch(err => console.error('fetchData error:', err));
+  }
+
+  connectWebSocket(wsUrl) {
+    this.socket = new WebSocket(wsUrl);
+    this.socket.addEventListener('message', event => {
+      try {
+        const json = JSON.parse(event.data);
+        this.replace(json);
+      } catch (e) {
+        console.error('WebSocket message parse error:', e);
+      }
+    });
+    this.socket.addEventListener('error', err => {
+      console.error('WebSocket error:', err);
+    });
+    this.socket.addEventListener('close', () => {
+      console.warn('WebSocket closed');
+    });
+  }
+}
+
+class Component {
+  constructor({ elId, template, data = {}, hydrate = false }) {
+    this.template = template;
+    this.reactiveData = new Reactive(data);
+    this.el = elId ? document.getElementById(elId) : document.createElement('div');
+    this.reactiveData.subscribe(() => this.update());
+    if (!hydrate) this.update();
+  }
+
+  update() {
+    if (this.el) {
+      this.el.innerHTML = this.template(this.reactiveData.data);
     }
   }
-};
+}
 
-// Класс для управления роутингом
-YuaidJS.Router = function(routes) {
-  this.routes = routes;
-  this.currentRoute = null;
-  window.addEventListener('popstate', this.handleRouteChange.bind(this));
-};
+class Router {
+  constructor(routes, onNavigate) {
+    this.routes = routes;
+    this.onNavigate = onNavigate;
 
-YuaidJS.Router.prototype.handleRouteChange = function() {
-  const path = window.location.pathname;
-  const route = this.routes[path] || this.routes['/'];
-  if (route) {
-    this.render(route);
+    window.addEventListener('popstate', () => this.navigate(location.pathname));
+
+    document.body.addEventListener('click', e => {
+      const link = e.target.closest('[data-link]');
+      if (link instanceof HTMLAnchorElement) {
+        e.preventDefault();
+        const href = link.getAttribute('href');
+        if (href && href !== location.pathname) {
+          history.pushState(null, '', href);
+          this.navigate(href);
+        }
+      }
+    });
+
+    this.navigate(location.pathname);
   }
-};
 
-YuaidJS.Router.prototype.navigate = function(path) {
-  window.history.pushState({}, 'YuaidJS Route', path); // Добавляем название в title истории
-  const route = this.routes[path] || this.routes['/'];
-  if (route) {
-    this.render(route);
+  navigate(path) {
+    const url = this.routes[path];
+    if (typeof url === 'string') {
+      this.onNavigate(path, url);
+    }
   }
-};
+}
 
-YuaidJS.Router.prototype.render = function(route) {
-  if (this.currentRoute) {
-    this.currentRoute.getElement().remove();
+function hydrateComponent(elId, template, data) {
+  const component = new Component({ elId, template, data, hydrate: true });
+
+  if (!document.body.hasAttribute('data-events-initialized')) {
+    document.body.setAttribute('data-events-initialized', 'true');
+    document.body.addEventListener('click', e => {
+      const target = e.target.closest('[data-event]');
+      if (target) {
+        const action = target.dataset.event;
+        if (typeof action === 'string') {
+          const fn = window[action];
+          if (typeof fn === 'function') fn(e);
+        }
+      }
+    });
   }
-  this.currentRoute = route;
-  document.body.appendChild(route.getElement());
+
+  return component;
+}
+
+window.YuaidJS = {
+  Reactive,
+  Component,
+  Router,
+  hydrateComponent
 };
