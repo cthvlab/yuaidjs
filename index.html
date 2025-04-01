@@ -2,13 +2,22 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>YuaidJS Пример</title>
+  <title>YuaidJS Пиратский Космос</title>
 </head>
 <body>
   <div id="app-container"></div>
-  <!-- Опциональные начальные данные -->
-  <script>window.__INITIAL_DATA__ = { ships: [{ name: "Звезда", status: "Готов" }], mission: "Исследование" };</script>
-  <script src="path/to/yuaidjs.js"></script>
-  <script src="app.js"></script>
+  <script>window.__INITIAL_DATA__ = { pirates: [{ "s.name": "Звёздный Галеон", "p.name": "Золотая Комета" }] };</script>
+  <script src="yuaidjs.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const component = window.YuaidJS.hydrateComponent('app-container', window.YuaidJS.pirateTemplate, window.__INITIAL_DATA__);
+      component.reactiveData.connectWebSocket('ws://localhost:4000/updates');
+      const routes = {
+        '/': 'http://localhost:4000/api/pirates',
+        '/ships': 'http://localhost:4000/api/ships'
+      };
+      new window.YuaidJS.Router(routes, (path, url) => component.reactiveData.fetchData(url));
+    });
+  </script>
 </body>
 </html>
