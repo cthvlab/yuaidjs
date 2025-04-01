@@ -2,11 +2,13 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>YuaidJS Приложение</title>
+  <title>Yuaidjs Пример</title>
 </head>
 <body>
-  <!-- Здесь будет рендериться контент -->
-  <script src="yuaidjs.js"></script>
+  <div id="app-container"></div>
+  <!-- Начальные данные (опционально) -->
+  <script>window.__INITIAL_DATA__ = { ships: [{ name: "Звезда", status: "Готов" }], mission: "Исследование" };</script>
+  <script src="path/to/yuaidjs.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
