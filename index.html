@@ -84,14 +84,14 @@
 
   // 🎧 Хукаемся в WebSocket
   const origConnect = window.YUAIDJs.Reactive.prototype.connectWebSocket;
-  window.YuaidJS.Reactive.prototype.connectWebSocket = function (url) {
+  window.YUAIDJs.Reactive.prototype.connectWebSocket = function (url) {
     logDebug(`Подключаем WebSocket: ${url}`);
     return origConnect.call(this, url);
   };
 
   // 🎧 Хукаемся в Router переходы
   const origRouterNav = window.YUAIDJs.Router.prototype.navigate;
-  window.YuaidJS.Router.prototype.navigate = async function (path) {
+  window.YUAIDJs.Router.prototype.navigate = async function (path) {
     logDebug(`Маршрут: ${path}`);
     return origRouterNav.call(this, path);
   };
