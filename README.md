@@ -90,35 +90,6 @@ function pirateTemplate(data) {
 }
 ```
 
----
-
-## ⚓️ API кратко
-
-### `new YUAIDJs.Reactive(data)`
-Создаёт реактивное хранилище.
-
-### `reactive.set(key, value)`
-Обновляет одно поле данных.
-
-### `reactive.replace(data)`
-Заменяет все данные.
-
-### `reactive.fetchData(url)`
-Загружает JSON по fetch.
-
-### `reactive.connectWebSocket(url)`
-Подключается по WebSocket и принимает бинарный JSON.
-
-### `new YUAIDJs.Component(template, data, elId)`
-Создаёт реактивный компонент.
-
-### `YUAIDJs.hydrateComponent(elId, template, data)`
-Привязывается к SSR DOM без рендера (гидрация).
-
-### `new YUAIDJs.Router(routes, onNavigate)`
-Навигация по `data-link` и истории браузера.
-
----
 
 ## 🛠️ Отладка
 
