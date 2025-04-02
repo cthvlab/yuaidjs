@@ -1,4 +1,4 @@
-// yuaidjs.js — YuaiDJs миксует биты на космической шхуне, самой быстрой в мультивселенной!
+// yuaidjs.js — YUAIDJs миксует биты на космическоv крейсере или скоростном звездолете и даже на шлюпке!
 
 class Reactive {
   constructor(data) {
@@ -43,7 +43,7 @@ class Reactive {
   // Чистим старые треки, чтобы танцпол был свежим!
   cleanupUnused() {
     this.unusedData = new WeakMap(); // Новый тайник, старье в утиль!
-    if (window.YuaidJS?.debug) console.log('Танцпол чист, капитан, врубай бит!');
+    if (window.YUAIDJs?.debug) console.log('Танцпол чист, капитан, врубай бит!');
   }
 
   fetchData(url) {
@@ -57,7 +57,7 @@ class Reactive {
         this.cache.set(url, json); // Кэшируем этот грув для быстрого доступа!
         this.replace(json); // Дропаем на танцпол!
       })
-      .catch(err => { if (window.YuaidJS?.debug) console.error('Ошибка на вертушке:', err); }); // Шторм на танцполе, держим ритм!
+      .catch(err => { if (window.YUAIDJs?.debug) console.error('Ошибка на вертушке:', err); }); // Шторм на танцполе, держим ритм!
   }
 
   // Врубай бинарный бит через WebSocket, прямой эфир с галактической сцены!
@@ -71,20 +71,20 @@ class Reactive {
           const json = window.msgpack.decode(new Uint8Array(arrayBuffer)); // Декодируем бинарный микс!
           this.replace(json); // Новый трек в эфире, качаем!
         } catch (e) {
-          if (window.YuaidJS?.debug) console.error('Ошибка в бинарном груве:', e);
+          if (window.YUAIDJs?.debug) console.error('Ошибка в бинарном груве:', e);
         }
       });
       this.socket.addEventListener('error', err => {
-        if (window.YuaidJS?.debug) console.error('Вертушка сломалась:', err); // Проблемы на сцене!
+        if (window.YUAIDJs?.debug) console.error('Вертушка сломалась:', err); // Проблемы на сцене!
       });
       this.socket.addEventListener('close', () => {
-        if (window.YuaidJS?.debug) console.warn('Эфир прерван, капитан!'); // Вечеринка на паузе!
+        if (window.YUAIDJs?.debug) console.warn('Эфир прерван, капитан!'); // Вечеринка на паузе!
       });
       this.socket.addEventListener('open', () => {
-        if (window.YuaidJS?.debug) console.log('Эфир врубили, ленивая загрузка на старте!');
+        if (window.YUAIDJs?.debug) console.log('Эфир врубили, ленивая загрузка на старте!');
       });
     } catch (e) {
-      if (window.YuaidJS?.debug) console.error('Ошибка подключения к сцене:', e); // Гиперпространственный сбой!
+      if (window.YUAIDJs?.debug) console.error('Ошибка подключения к сцене:', e); // Гиперпространственный сбой!
     }
   }
 
@@ -230,7 +230,7 @@ class Router {
           this.cache.set(path, data); // В кэш для следующего спина!
           this.mountFn(path, data); // Дропаем на танцпол!
         } catch (e) {
-          if (window.YuaidJS?.debug) console.error('Ошибка спина маршрута:', e);
+          if (window.YUAIDJs?.debug) console.error('Ошибка спина маршрута:', e);
         }
       }
     }
@@ -272,7 +272,7 @@ function lazyLoadWebSocket(component, wsUrl) {
   });
 }
 
-window.YuaidJS = {
+window.YUAIDJs = {
   Reactive,
   Component,
   Router,
