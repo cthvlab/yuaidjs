@@ -1,22 +1,46 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>YuaidJS Пиратский Космос</title>
+  <meta charset="UTF-8" />
+  <title>YuaiDJs Hydration</title>
+  <script src="https://unpkg.com/@msgpack/msgpack@2.8.0/dist/msgpack.min.js"></script>
+  <script>
+    // Пример стартовых данных от сервера (SSR)
+    window.__INITIAL_DATA__ = {
+      pirates: [
+        { "p.name": "Златозуб", "s.name": "Чёрная каракка" },
+        { "p.name": "Безрукий Джо", "s.name": "Чёрная каракка" }
+      ]
+    };
+  </script>
 </head>
 <body>
-  <div id="app-container"></div>
-  <script>window.__INITIAL_DATA__ = { pirates: [{ "s.name": "Звёздный Галеон", "p.name": "Золотая Комета" }] };</script>
-  <script src="yuaidjs.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const component = window.YuaidJS.hydrateComponent('app-container', window.YuaidJS.pirateTemplate, window.__INITIAL_DATA__);
-      component.reactiveData.connectWebSocket('ws://localhost:4000/updates');
-      const routes = {
-        '/': 'http://localhost:4000/api/pirates',
-        '/ships': 'http://localhost:4000/api/ships'
-      };
-      new window.YuaidJS.Router(routes, (path, url) => component.reactiveData.fetchData(url));
+  <nav>
+    <a href="/" data-link>Пираты</a>
+    <a href="/ships" data-link>Корабли</a>
+  </nav>
+  <main id="app"></main>
+
+  <script type="module">
+    import {
+      hydrateComponent,
+      pirateTemplate,
+      Router
+    } from './yuaidjs.hydrate.js';
+
+    const component = hydrateComponent('app', pirateTemplate, {
+      pirates: window.__INITIAL_DATA__.pirates
+    });
+
+    component.reactiveData.connectWebSocket('ws://localhost:4000/updates');
+
+    const routes = {
+      '/': '/api/pirates',
+      '/ships': '/api/ships'
+    };
+
+    new Router(routes, (path, data) => {
+      component.reactiveData.replace(data);
     });
   </script>
 </body>
