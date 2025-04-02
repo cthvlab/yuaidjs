@@ -54,5 +54,48 @@
       component.reactiveData.replace(data); // 💾 Обновляем данные в real-time
     });
   </script>
+<!-- 💡 Панель отладки: включается если включён window.YuaidJS.debug -->
+<div id="yuai-debug" style="
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  max-width: 400px;
+  max-height: 200px;
+  overflow: auto;
+  background: rgba(0, 0, 0, 0.8);
+  color: lime;
+  font-family: monospace;
+  font-size: 12px;
+  padding: 10px;
+  z-index: 9999;
+  display: none;
+"></div>
+
+<script>
+  const logDebug = (msg) => {
+    if (!window.YuaidJS?.debug) return;
+    const panel = document.getElementById('yuai-debug');
+    panel.style.display = 'block';
+    const line = document.createElement('div');
+    line.textContent = `[yuaiDJs] ${msg}`;
+    panel.appendChild(line);
+    panel.scrollTop = panel.scrollHeight;
+  };
+
+  // 🎧 Хукаемся в WebSocket
+  const origConnect = window.YuaidJS.Reactive.prototype.connectWebSocket;
+  window.YuaidJS.Reactive.prototype.connectWebSocket = function (url) {
+    logDebug(`Подключаем WebSocket: ${url}`);
+    return origConnect.call(this, url);
+  };
+
+  // 🎧 Хукаемся в Router переходы
+  const origRouterNav = window.YuaidJS.Router.prototype.navigate;
+  window.YuaidJS.Router.prototype.navigate = async function (path) {
+    logDebug(`Маршрут: ${path}`);
+    return origRouterNav.call(this, path);
+  };
+</script>
+
 </body>
 </html>
