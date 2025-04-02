@@ -1,161 +1,275 @@
-// yuaidjs.js — космическая шхуна YuaidJS, готовая к гиперпрыжкам по звёздам!
+// yuaidjs.js — YuaiDJs миксует биты на космической шхуне, самой быстрой в мультивселенной!
 
 class Reactive {
   constructor(data) {
-    this.data = data;           // Йо-хо! Это наш сундук с данными, капитан!
-    this.listeners = [];        // Матросы, готовые кричать при обновлениях!
-    this.socket = null;         // Космическая рация для связи с галактикой!
-    this.pendingUpdate = false; // Флаг, чтобы не стрелять из всех пушек сразу!
+    this.data = data;           // Дропаем базу! Это наш главный трек с данными, пираты!
+    this.listeners = [];        // Слушатели в зале, готовые качать под каждый новый бит!
+    this.socket = null;         // Космическая вертушка для прямого эфира с галактикой!
+    this.pendingUpdate = false; // Флаг, чтобы не закидывать треки слишком быстро, держим ритм!
+    this.unusedData = new WeakMap(); // Тайник для старых пластинок, чтоб не грузить память!
+    this.cache = new Map();     // Кэш-хиты для быстрого доступа, как плейлист yuaidb!
+    this.cleanupInterval = setInterval(() => this.cleanupUnused(), 60000); // Чистим танцпол каждые 60 сек!
   }
 
   subscribe(callback) {
-    this.listeners.push(callback); // Новый матрос на борт, слушай приказы!
+    this.listeners.push(callback); // Новый гость на вечеринке, врубайтесь в бит, юнги!
   }
 
   set(key, value) {
-    this.data[key] = value;    // Меняем карту сокровищ, новый курс!
-    this.scheduleUpdate();      // Поднять паруса, пора обновляться!
+    this.data[key] = value;    // Меняем пластинку, новый грув на танцполе!
+    this.scheduleUpdate();      // Врубай микшер, пора качать обновления!
   }
 
   replace(newData) {
-    this.data = newData;       // Новый груз в трюм, полная замена!
-    this.scheduleUpdate();      // Вперёд, на всех парах!
+    if (this.data && typeof this.data === 'object') {
+      this.unusedData.set(this, this.data); // Старый трек в тайник, освобождаем место!
+    }
+    this.data = newData;       // Новый микс в эфир, полный дроп!
+    this.scheduleUpdate();      // Врубай бит, капитан, танцпол гудит!
   }
 
-  // Йо-хо-хо! Батчинг через звёздный ветер — обновляем всё одним рывком!
+  // Батчинг через звёздный вайб — один дроп, и все в деле!
   scheduleUpdate() {
     if (!this.pendingUpdate) {
       this.pendingUpdate = true;
-      requestAnimationFrame(() => {
+      // Используем requestIdleCallback для chill-обновлений или rAF для быстрого дропа!
+      (window.requestIdleCallback || window.requestAnimationFrame)(() => {
         this.pendingUpdate = false;
-        this.listeners.forEach(cb => cb()); // Кричим всем: "Земля на горизонте!"
+        this.listeners.forEach(cb => cb()); // Все в зале кричат: "Дропай бит!"
       });
     }
+  }
+
+  // Чистим старые треки, чтобы танцпол был свежим!
+  cleanupUnused() {
+    this.unusedData = new WeakMap(); // Новый тайник, старье в утиль!
+    if (window.YuaidJS?.debug) console.log('Танцпол чист, капитан, врубай бит!');
   }
 
   fetchData(url) {
-    fetch(url)  // Отправляем шлюпку за сокровищами!
+    if (this.cache.has(url)) { // Хит из кэша yuaidb, дропаем сразу!
+      this.replace(this.cache.get(url));
+      return Promise.resolve();
+    }
+    return fetch(url)  // Спинним новую пластинку с сервера!
       .then(r => r.json())
-      .then(json => this.replace(json)) // Грузим добычу в трюм!
-      .catch(err => { if (window.YuaidJS?.debug) console.error('fetchData error:', err); }); // Ой, шторм! Ложись в дрейф!
+      .then(json => {
+        this.cache.set(url, json); // Кэшируем этот грув для быстрого доступа!
+        this.replace(json); // Дропаем на танцпол!
+      })
+      .catch(err => { if (window.YuaidJS?.debug) console.error('Ошибка на вертушке:', err); }); // Шторм на танцполе, держим ритм!
   }
 
-  // Поднимаем антенны для связи с космическими ветрами!
+  // Врубай бинарный бит через WebSocket, прямой эфир с галактической сцены!
   connectWebSocket(wsUrl) {
     try {
-      this.socket = new WebSocket(wsUrl);
+      this.socket = new WebSocket(wsUrl, ['binary']); // Бинарный грув, быстрее света!
+      this.socket.binaryType = 'arraybuffer'; // Данные как сырые биты, юнги!
       this.socket.addEventListener('message', event => {
         try {
-          const json = JSON.parse(event.data);
-          this.replace(json); // Новый сигнал с орбиты, обновляем курс!
+          const arrayBuffer = event.data;
+          const json = window.msgpack.decode(new Uint8Array(arrayBuffer)); // Декодируем бинарный микс!
+          this.replace(json); // Новый трек в эфире, качаем!
         } catch (e) {
-          if (window.YuaidJS?.debug) console.error('WebSocket message parse error:', e);
+          if (window.YuaidJS?.debug) console.error('Ошибка в бинарном груве:', e);
         }
       });
       this.socket.addEventListener('error', err => {
-        if (window.YuaidJS?.debug) console.error('WebSocket error:', err); // Рация трещит, что-то не так!
+        if (window.YuaidJS?.debug) console.error('Вертушка сломалась:', err); // Проблемы на сцене!
       });
       this.socket.addEventListener('close', () => {
-        if (window.YuaidJS?.debug) console.warn('WebSocket closed'); // Связь потеряна, капитан!
+        if (window.YuaidJS?.debug) console.warn('Эфир прерван, капитан!'); // Вечеринка на паузе!
+      });
+      this.socket.addEventListener('open', () => {
+        if (window.YuaidJS?.debug) console.log('Эфир врубили, ленивая загрузка на старте!');
       });
     } catch (e) {
-      if (window.YuaidJS?.debug) console.error('WebSocket connection error:', e); // Ошибка в гиперпространстве!
+      if (window.YuaidJS?.debug) console.error('Ошибка подключения к сцене:', e); // Гиперпространственный сбой!
     }
   }
+
+  // Сериализуем грув для других пиратов на вечеринке!
+  toJSON() {
+    return JSON.stringify(this.data); // Микс в строке, готов к раздаче!
+  }
+
+  // Десериализуем трек от другого диджея!
+  static fromJSON(json) {
+    return new Reactive(JSON.parse(json)); // Новый объект с грувом, врубай бит!
+  }
+}
+
+// Мини-Virtual DOM — микшер для точечных дропов на танцполе!
+function diffAndPatch(oldNodes, newNodes, parent) {
+  const keyed = new Map();    // Карта ключевых битов, держим порядок!
+  const oldByIndex = new Map(); // Индексы для остальных треков!
+
+  oldNodes.forEach((node, i) => {
+    if (node.nodeType === 1 && node.dataset.key) {
+      keyed.set(node.dataset.key, node); // Ключевой хит в плейлисте!
+    } else {
+      oldByIndex.set(i, node); // Просто трек по порядку!
+    }
+  });
+
+  newNodes.forEach((newNode, i) => {
+    const key = newNode.dataset?.key;
+    const existing = key ? keyed.get(key) : oldByIndex.get(i);
+
+    if (!existing && newNode) {
+      parent.appendChild(newNode); // Новый бит на сцену, дропай!
+    } else if (existing && !newNode) {
+      existing.remove(); // Старый трек выключаем, юнги!
+    } else if (existing && newNode) {
+      if (newNode.nodeName !== existing.nodeName || !newNode.isEqualNode(existing)) {
+        if (newNode.nodeType === 1 && existing.nodeType === 1) {
+          diffAndPatch(Array.from(existing.childNodes), Array.from(newNode.childNodes), existing); // Миксуем вложенные биты!
+          existing.replaceWith(newNode); // Заменяем корень, если дети в порядке!
+        } else {
+          parent.replaceChild(newNode, existing); // Полный дроп, новый грув!
+        }
+      }
+    }
+    if (key) keyed.delete(key); // Убираем использованный хит!
+    oldByIndex.delete(i);
+  });
+
+  keyed.forEach(node => node.remove()); // Лишние треки — в утиль!
+  oldByIndex.forEach(node => node.remove()); // Чистим остатки!
 }
 
 class Component {
   constructor(template, data, elId, hydrate = false) {
-    this.template = template;    // Карта звёздного неба для рендера!
-    this.reactiveData = new Reactive(data); // Наш сундук с данными!
-    this.el = document.getElementById(elId); // Палуба корабля, куда грузим добычу!
-    this.lastRendered = '';      // Последний курс, чтобы не дрейфовать зря!
-    if (!this.el) throw new Error(`Element with id "${elId}" not found`); // Нет палубы? Бунт на борту!
-    this.reactiveData.subscribe(() => this.update()); // Слушаем штормовые ветры изменений!
-    if (!hydrate) this.update(); // Не гидрация? Тогда сразу к бою!
+    this.template = typeof template === 'string' ? this.precompileTemplate(template) : template; // Предкомпиляция или готовый микс!
+    this.reactiveData = new Reactive(data); // Главный сундук с грувом!
+    this.el = document.getElementById(elId); // Танцпол, где качаем биты!
+    this.lastRendered = '';      // Последний дроп в памяти!
+    this.eventListeners = new Map(); // Карта для диджейских движений!
+    if (!this.el) throw new Error(`Танцпол с id "${elId}" не найден, юнги!`);
+    this.reactiveData.subscribe(() => this.update()); // Слушаем бит и врубляем микшер!
+    if (!hydrate) this.update(); // Не гидрация? Дропаем сразу!
   }
 
-  // Быстрее ветра! Рисуем звёзды на небе одним махом!
+  // Предкомпиляция — готовим трек для быстрого спина!
+  precompileTemplate(templateString) {
+    return (data) => {
+      const pirates = Array.isArray(data.pirates) ? data.pirates : [];
+      const ship = pirates.length && pirates[0]["s.name"] ? pirates[0]["s.name"] : "";
+      return templateString
+        .replace('${ship}', ship) // Название шхуны в заголовке!
+        .replace('${pirates}', pirates.map(p => `<p data-key="${p["p.name"]}">Сокровище: ${p["p.name"]}</p>`).join('')) // Ключевые биты пиратов!
+        .replace('${footer}', pirates.length ? '<footer>Экипаж в деле!</footer>' : ''); // Футер, если танцпол полон!
+    };
+  }
+
+  // Миксуем танцпол, дропаем только нужные биты!
   update() {
     const html = this.template(this.reactiveData.data);
-    if (html === this.lastRendered) return; // Курс тот же? Спим дальше, юнги!
+    if (html === this.lastRendered) return; // Тот же грув? Чиллим дальше!
     this.lastRendered = html;
 
-    const template = document.createElement('template'); // Волшебный сундук для магии DOM!
-    template.innerHTML = html; // Грузим карту в сундук!
-    const fragment = document.createDocumentFragment(); // Быстрый шторм, собираем всё в кучу!
-    fragment.appendChild(template.content); // Перекладываем добычу!
-    this.el.replaceChildren(fragment); // Новый курс на палубе, без лишнего шума!
+    const template = document.createElement('template'); // Сундук для новых треков!
+    template.innerHTML = html; // Грузим свежий микс!
+    const newNodes = Array.from(template.content.childNodes); // Новые биты на сцене!
+    const oldNodes = Array.from(this.el.childNodes); // Старые треки с танцпола!
+    diffAndPatch(oldNodes, newNodes, this.el); // Миксуем только нужное!
+  }
+
+  // Врубай движ — события прямо на танцполе!
+  on(event, selector, callback) {
+    const listener = (e) => {
+      const target = e.target.closest(selector);
+      if (target) callback(e); // Танцуем, если попали в бит!
+    };
+    this.eventListeners.set(callback, listener);
+    this.el.addEventListener(event, listener);
+  }
+
+  off(event, callback) {
+    const listener = this.eventListeners.get(callback);
+    if (listener) {
+      this.el.removeEventListener(event, listener);
+      this.eventListeners.delete(callback); // Убираем старый движ!
+    }
   }
 }
 
 class Router {
   constructor(routes, mountFn) {
-    this.routes = routes;       // Карта звёздных путей, капитан!
-    this.mountFn = mountFn;     // Боцман, который кричит, куда плыть!
-    this.cache = new Map();     // Сундук с уже пройденными маршрутами!
+    this.routes = routes;       // Плейлист маршрутов, капитан!
+    this.mountFn = mountFn;     // Диджей, который кричит, куда спиннить!
+    this.cache = new Map();     // Кэш для хитов маршрутов!
 
-    window.addEventListener('popstate', () => this.navigate(location.pathname)); // Слушаем повороты штурвала!
+    window.addEventListener('popstate', () => this.navigate(location.pathname)); // Ловим повороты вертушки!
 
-    document.body.addEventListener('click', e => { // Ловим клики по звёздным компасам!
+    document.body.addEventListener('click', e => { // Ловим клики по космическим пультам!
       const link = e.target.closest('[data-link]');
       if (link instanceof HTMLAnchorElement) {
         e.preventDefault();
         const href = link.getAttribute('href');
         if (href && href !== location.pathname) {
-          history.pushState(null, '', href); // Новый курс в истории!
-          this.navigate(href); // Плывём по звёздам!
+          history.pushState(null, '', href); // Новый трек в истории!
+          this.navigate(href); // Спинним новый маршрут!
         }
       }
     });
 
-    this.navigate(location.pathname); // Стартуем с текущей гавани!
+    this.navigate(location.pathname); // Стартуем с текущего хита!
   }
 
-  // Плывём по маршруту, проверяем сундук с кэшем!
-  navigate(path) {
+  // Спинним маршрут, проверяем кэш для быстрого дропа!
+  async navigate(path) {
     const url = this.routes[path];
     if (typeof url === 'string') {
       if (this.cache.has(path)) {
-        this.mountFn(path, this.cache.get(path)); // Из сундука, быстро!
+        this.mountFn(path, this.cache.get(path)); // Хит из кэша, врубай!
       } else {
-        this.mountFn(path, url); // Новый путь, грузим с нуля!
-        this.cache.set(path, url); // В сундук на память!
+        try {
+          const response = await fetch(url); // Грузим новый трек!
+          const data = await response.json();
+          this.cache.set(path, data); // В кэш для следующего спина!
+          this.mountFn(path, data); // Дропаем на танцпол!
+        } catch (e) {
+          if (window.YuaidJS?.debug) console.error('Ошибка спина маршрута:', e);
+        }
       }
     }
   }
 }
 
-// Гидрация — поднимаем паруса с готовой карты!
+// Гидрация — врубай бит с готового микса от yuairender!
 function hydrateComponent(elId, template, data) {
   const component = new Component(template, data, elId, true);
 
   if (!document.body.hasAttribute('data-events-initialized')) {
     document.body.setAttribute('data-events-initialized', 'true');
-    document.body.addEventListener('click', e => { // Ловим сигналы с мостика!
+    document.body.addEventListener('click', e => { // Ловим движения на танцполе!
       const target = e.target.closest('[data-event]');
       if (target) {
         const action = target.dataset.event;
         if (typeof action === 'string') {
           const fn = window[action];
-          if (typeof fn === 'function') fn(e); // Выполняем приказ капитана!
+          if (typeof fn === 'function') fn(e); // Диджейский приказ в эфире!
         }
       }
     });
   }
 
-  return component; // Корабль готов к бою, капитан!
+  return component; // Шхуна готова качать, капитан!
 }
 
-// Пиратский шаблон для весёлых космических приключений!
-function pirateTemplate(data) {
-  const pirates = Array.isArray(data.pirates) ? data.pirates : [];
-  const ship = pirates.length && pirates[0]["s.name"] ? pirates[0]["s.name"] : "";
-  return `
-    <h1>${ship}</h1>
-    ${pirates.map(p => `<p>Сокровище: ${p["p.name"]}</p>`).join('')}
-    ${pirates.length ? '<footer>Экипаж готов</footer>' : ''}
-  `;
+// Шаблон для предкомпиляции — базовый грув вечеринки!
+const pirateTemplateString = `
+  <h1>\${ship}</h1>
+  \${pirates}
+  \${footer}
+`;
+
+// Ленивая загрузка через WebSocket — дропаем бит после старта!
+function lazyLoadWebSocket(component, wsUrl) {
+  requestAnimationFrame(() => {
+    component.reactiveData.connectWebSocket(wsUrl); // Врубай эфир, юнги!
+  });
 }
 
 window.YuaidJS = {
@@ -163,6 +277,7 @@ window.YuaidJS = {
   Component,
   Router,
   hydrateComponent,
-  pirateTemplate,
-  debug: true // Йо-хо! Включаем пиратские крики для отладки!
+  pirateTemplate: pirateTemplateString,
+  lazyLoadWebSocket,
+  debug: true // Врубай дебаг, чтобы все видели, как мы качаем!
 };
