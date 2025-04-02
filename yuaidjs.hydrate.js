@@ -1,4 +1,4 @@
-// YUAIDJs.hydrate.js — YUAIDJs качает интерфейс под бит SSR, fetch и WebSocket!
+// yuaidjs.hydrate.js — YUAIDJs качает интерфейс под бит SSR, fetch и WebSocket!
 
 // Reactive — диджейская панель управления данными, всё обновляется по ритму!
 export class Reactive {
@@ -158,7 +158,7 @@ export function pirateTemplate(data) {
 // Как это всё подключается (в index.html):
 // <script>window.__INITIAL_DATA__ = [...];</script>
 // <script type="module">
-// import { hydrateComponent, pirateTemplate, Router } from './YUAIDJs.hydrate.js';
+// import { hydrateComponent, pirateTemplate, Router } from './yuaidjs.hydrate.js';
 // const component = hydrateComponent('app', pirateTemplate, { pirates: window.__INITIAL_DATA__ });
 // component.reactiveData.connectWebSocket('ws://localhost:4000/updates');
 // const routes = {
