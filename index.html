@@ -33,7 +33,7 @@
       hydrateComponent,
       pirateTemplate,
       Router
-    } from './YUAIDJs.hydrate.js';
+    } from './yuaidjs.hydrate.js';
 
     // 🔥 Начинаем вечеринку! Привязываем шаблон к SSR-данным и готовим DOM
     const component = hydrateComponent('app', pirateTemplate, {
@@ -54,7 +54,7 @@
       component.reactiveData.replace(data); // 💾 Обновляем данные в real-time
     });
   </script>
-<!-- 💡 Панель отладки: включается если включён window.YuaidJS.debug -->
+<!-- 💡 Панель отладки: включается если включён window.YUAIDJs.debug -->
 <div id="yuai-debug" style="
   position: fixed;
   bottom: 0;
@@ -73,24 +73,24 @@
 
 <script>
   const logDebug = (msg) => {
-    if (!window.YuaidJS?.debug) return;
+    if (!window.YUAIDJs?.debug) return;
     const panel = document.getElementById('yuai-debug');
     panel.style.display = 'block';
     const line = document.createElement('div');
-    line.textContent = `[yuaiDJs] ${msg}`;
+    line.textContent = `[YUAIDJs] ${msg}`;
     panel.appendChild(line);
     panel.scrollTop = panel.scrollHeight;
   };
 
   // 🎧 Хукаемся в WebSocket
-  const origConnect = window.YuaidJS.Reactive.prototype.connectWebSocket;
+  const origConnect = window.YUAIDJs.Reactive.prototype.connectWebSocket;
   window.YuaidJS.Reactive.prototype.connectWebSocket = function (url) {
     logDebug(`Подключаем WebSocket: ${url}`);
     return origConnect.call(this, url);
   };
 
   // 🎧 Хукаемся в Router переходы
-  const origRouterNav = window.YuaidJS.Router.prototype.navigate;
+  const origRouterNav = window.YUAIDJs.Router.prototype.navigate;
   window.YuaidJS.Router.prototype.navigate = async function (path) {
     logDebug(`Маршрут: ${path}`);
     return origRouterNav.call(this, path);
